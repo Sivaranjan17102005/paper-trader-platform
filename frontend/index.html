@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#080b11">
+  <title>Paper Trader — Simulated Crypto Markets</title>
+  <meta name="description" content="A private, in-memory crypto paper trading simulator for learning and strategy practice.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="Paper Trader home"><span class="brand-mark">P</span><span>paper<span class="brand-light">trader</span><small>SIMULATED MARKETS</small></span></a>
+      <div class="market-status"><i class="pulse"></i><span>COINGECKO FEED · ~60S</span><b id="feed-status" title="Waiting for market data">CONNECTING</b></div>
+      <div class="account-strip">
+        <div><span class="eyebrow">TOTAL EQUITY</span><strong id="equity-value">$1,000,000.00</strong></div>
+        <div class="cash-stat"><span class="eyebrow">AVAILABLE CASH</span><strong id="cash-value">$1,000,000.00</strong></div>
+        <button id="reset-button" class="reset-button" title="Reset the simulation account">Reset account <span>↺</span></button>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <aside class="sidebar">
+        <div class="panel-title"><span class="eyebrow">MARKET</span><span class="live-dot"></span></div>
+        <label class="field-label" for="coin-select">Asset</label>
+        <select id="coin-select" class="select-control" aria-label="Select cryptocurrency"></select>
+        <div class="current-quote"><span id="selected-coin-name">Loading market…</span><strong id="selected-price">—</strong><small>USD · CoinGecko</small></div>
+        <div class="section-divider"></div>
+        <div class="field-label">Chart range</div>
+        <div class="timeframes" role="group" aria-label="Chart timeframe">
+          <button data-days="1">1D</button><button class="active" data-days="7">7D</button><button data-days="30">30D</button><button data-days="90">90D</button><button data-days="365">1Y</button>
+        </div>
+        <div class="section-divider"></div>
+        <div class="order-heading"><span class="eyebrow">NEW ORDER</span><span class="sim-badge">PAPER</span></div>
+        <form id="order-form" class="order-form">
+          <label class="field-label" for="order-symbol">Symbol</label><input id="order-symbol" class="input-control readonly" value="—" readonly>
+          <div class="field-label side-label">Direction <span>Short selling enabled</span></div>
+          <div class="side-toggle" role="group" aria-label="Order side"><button type="button" data-side="BUY" class="buy active">Buy / Long</button><button type="button" data-side="SELL" class="sell">Sell / Short</button></div>
+          <label class="field-label" for="order-qty">Quantity</label><div class="input-wrap"><input id="order-qty" class="input-control mono" type="number" min="0" step="any" placeholder="0.00" required><span id="qty-unit">BTC</span></div>
+          <label class="field-label" for="order-price">Limit price <span class="field-note">USD</span></label><div class="input-wrap"><span class="input-prefix">$</span><input id="order-price" class="input-control mono has-prefix" type="number" min="0" step="any" placeholder="Fetching…" required></div>
+          <div id="order-estimate" class="order-estimate"><span>Order value</span><strong>—</strong></div>
+          <button id="submit-order" class="submit-order buy-button" type="submit"><span>Place buy order</span><b>↗</b></button>
+          <p class="order-footnote">Simulated orders only. No real funds involved.</p>
+        </form>
+      </aside>
+
+      <section class="main-column">
+        <section class="chart-panel">
+          <div class="chart-heading"><div><span class="eyebrow">PRICE CHART</span><h1 id="chart-title">Bitcoin <span>BTC / USD</span></h1></div><div class="chart-meta"><span class="chart-range-label">LAST 7 DAYS</span><span id="chart-updated">Waiting for data</span></div></div>
+          <div class="drawing-toolbar" role="toolbar" aria-label="Chart drawing tools">
+            <span class="toolbar-label">DRAW</span>
+            <button data-tool="trend-line" title="Draw a trend line">╱ <span>Trend</span></button>
+            <button data-tool="horizontal-line" title="Draw a horizontal line">━ <span>Horizontal</span></button>
+            <button data-tool="rectangle" title="Draw a rectangle">▱ <span>Rectangle</span></button>
+            <button data-tool="fibonacci-retracement" title="Draw Fibonacci retracement">ƒ <span>Fibonacci</span></button>
+            <button id="clear-drawings" class="clear-drawings" title="Clear all drawings">⌫ <span>Clear</span></button>
+            <span id="drawing-status" class="drawing-status">Select a tool, then draw on chart</span>
+          </div>
+          <div class="chart-wrap"><oak-view id="chart" theme="dark" style="display:block;width:100%;height:100%"></oak-view><div id="chart-empty" class="chart-empty"><div class="spinner"></div><p>Loading market data</p></div></div>
+          <div id="chart-error" class="chart-error" hidden></div>
+          <div class="chart-legend"><span><i class="legend-candle"></i>Price · USD</span><span>Market data provided by CoinGecko</span></div>
+        </section>
+        <section class="bottom-panel">
+          <div class="tabs" role="tablist"><button class="tab active" data-tab="positions" role="tab">Positions <span id="position-count" class="tab-count">0</span></button><button class="tab" data-tab="history" role="tab">Trade history <span id="trade-count" class="tab-count">0</span></button><button class="tab" data-tab="equity" role="tab">Equity curve</button><span id="portfolio-pnl" class="portfolio-pnl">TODAY <b>—</b></span></div>
+          <div id="positions-view" class="tab-view active"><div class="table-scroll"><table><thead><tr><th>ASSET</th><th>POSITION</th><th>QUANTITY</th><th>AVG. ENTRY</th><th>MARK PRICE</th><th>UNREALIZED P&amp;L</th><th></th></tr></thead><tbody id="positions-body"></tbody></table></div><div id="positions-empty" class="empty-state"><span class="empty-icon">⌁</span><strong>No open positions</strong><small>Your active paper trades will appear here.</small></div></div>
+          <div id="history-view" class="tab-view"><div class="table-scroll"><table><thead><tr><th>TIME</th><th>ASSET</th><th>ACTION</th><th>QUANTITY</th><th>PRICE</th><th>REALIZED P&amp;L</th></tr></thead><tbody id="history-body"></tbody></table></div><div id="history-empty" class="empty-state"><span class="empty-icon">◷</span><strong>No trades yet</strong><small>Your completed and open orders will appear here.</small></div></div>
+          <div id="equity-view" class="tab-view equity-view"><canvas id="equity-canvas" aria-label="Account equity over time"></canvas><div id="equity-empty" class="empty-state"><span class="empty-icon">⌁</span><strong>Your equity curve starts with your first price update</strong><small>Portfolio prices refresh with the market feed, about once per minute.</small></div></div>
+        </section>
+        <footer class="app-footer"><span>EDUCATIONAL SIMULATOR <i></i> DATA DELAY MAY APPLY</span><span>NOT FINANCIAL ADVICE</span></footer>
+      </section>
+    </main>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  </div>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
+
